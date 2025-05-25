@@ -8,7 +8,6 @@ const pitchDeletedTemplate = require("../utils/templates/pitchDeleted");
 exports.createPitch = async (req, res) => {
   try {
     const { name, playersPerSide, city, location, description } = req.body;
-
     let services = req.body.services;
 
     if (typeof services === "string") {
@@ -27,8 +26,6 @@ exports.createPitch = async (req, res) => {
     const additionalImageFiles = req.files?.images || [];
 
     //ensure background image is provided
-    console.log(backgroundImageFile);
-    console.log(req.file);
     if (!backgroundImageFile) {
       return res.status(400).json({
         status: "fail",
