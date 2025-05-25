@@ -1,12 +1,10 @@
-//this file is used to setup the server
-
 //environment variables
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 
 //modules
-const mongoose = require("mongoose");
 const app = require("./app");
+const mongoose = require("mongoose");
 
 //connect to the database
 mongoose

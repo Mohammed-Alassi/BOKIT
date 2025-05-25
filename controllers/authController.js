@@ -184,7 +184,6 @@ exports.forgotPassword = async (req, res) => {
       message: "OTP sent to email",
     });
   } catch (err) {
-    console.error("Forgot password error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to send OTP. Try again.",
@@ -233,7 +232,6 @@ exports.verifyOtp = async (req, res) => {
       message: "OTP verified. You may reset your password now.",
     });
   } catch (err) {
-    console.error("OTP verification error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to verify OTP",
@@ -271,7 +269,7 @@ exports.resetPassword = async (req, res) => {
     }
 
     //hash the password manually
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     //save hashed password and clear OTP fields
     user.password = hashedPassword;
@@ -284,7 +282,6 @@ exports.resetPassword = async (req, res) => {
       message: "Password reset successfully. You can now log in.",
     });
   } catch (err) {
-    console.error("Reset password error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to reset password",

@@ -1,9 +1,8 @@
 //modules
 const mongoose = require("mongoose");
 
-//schema definition for a single leaderboard type (e.g., "goals", "mvp", etc.)
+//schema
 const leaderboardSchema = new mongoose.Schema({
-  //type of stat the leaderboard tracks
   type: {
     type: String,
     enum: ["wins", "mvp", "goals", "assists", "interceptions", "cleanSheets"],
@@ -11,7 +10,6 @@ const leaderboardSchema = new mongoose.Schema({
     unique: true,
   },
 
-  //top 50 players for this stat type
   topPlayers: [
     {
       player: {
@@ -25,6 +23,6 @@ const leaderboardSchema = new mongoose.Schema({
   ],
 });
 
-//export the model
+//export
 const Leaderboard = mongoose.model("Leaderboard", leaderboardSchema);
 module.exports = Leaderboard;

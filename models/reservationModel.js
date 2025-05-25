@@ -36,7 +36,7 @@ const reservationSchema = new mongoose.Schema({
   maxPlayers: {
     type: Number,
     required: [true, "Please provide the max players for the reservation"],
-    //min: [12, "There must be at least 12 player"],
+    min: [12, "There must be at least 12 player"],
   },
 
   currentPlayers: [
@@ -54,6 +54,6 @@ const reservationSchema = new mongoose.Schema({
   ],
 });
 
-//export model
+//export
 const Reservation = mongoose.model("Reservation", reservationSchema);
 module.exports = Reservation;

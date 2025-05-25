@@ -24,7 +24,6 @@ exports.getMyProfile = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get profile error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to fetch profile. Please try again.",
@@ -48,6 +47,7 @@ exports.updateMyProfile = async (req, res) => {
       "bio",
     ];
 
+    //get updated fields
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
@@ -59,6 +59,7 @@ exports.updateMyProfile = async (req, res) => {
       updates.profilePicture = req.file.path;
     }
 
+    //update
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
       new: true,
       runValidators: true,
@@ -72,7 +73,6 @@ exports.updateMyProfile = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Update profile error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to update profile. Please try again.",
@@ -104,7 +104,6 @@ exports.deleteMyProfile = async (req, res) => {
       message: "Account deleted successfully",
     });
   } catch (err) {
-    console.error("Delete account error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to delete account. Please try again.",
@@ -143,7 +142,6 @@ exports.getUserById = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get user by ID error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to fetch user profile",
@@ -171,7 +169,7 @@ exports.getMyBookings = async (req, res) => {
       const pitch = resv.pitch;
 
       return {
-        ...resv._doc,
+        ...resv._doc, //access the object
         pitch: {
           ...pitch._doc,
           format: `${pitch.playersPerSide}v${pitch.playersPerSide}`,
@@ -188,7 +186,6 @@ exports.getMyBookings = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get my bookings error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to retrieve your bookings",

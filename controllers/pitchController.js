@@ -10,6 +10,7 @@ exports.createPitch = async (req, res) => {
     const { name, playersPerSide, city, location, description } = req.body;
     let services = req.body.services;
 
+    //check on services
     if (typeof services === "string") {
       try {
         services = JSON.parse(services);
@@ -21,7 +22,7 @@ exports.createPitch = async (req, res) => {
       }
     }
 
-    // Extract the files grouped by name from multer
+    //extract the files grouped by name from multer
     const backgroundImageFile = req.files?.backgroundImage?.[0];
     const additionalImageFiles = req.files?.images || [];
 
@@ -70,8 +71,6 @@ exports.createPitch = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Pitch creation error:", err);
-
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((el) => el.message);
       return res.status(400).json({
@@ -206,12 +205,9 @@ exports.deletePitch = async (req, res) => {
       message: "Pitch and all related reservations deleted successfully",
     });
   } catch (err) {
-    console.error("Delete pitch error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to delete pitch and reservations. Please try again.",
     });
   }
 };
-
-//hello

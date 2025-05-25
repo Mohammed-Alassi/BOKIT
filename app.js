@@ -1,46 +1,28 @@
-//this file is used to initialize the express app
-
 //modules
-const express = require("express");
-const morgan = require("morgan");
 const cors = require("cors");
+const morgan = require("morgan");
+const express = require("express");
 const authRouter = require("./routes/authRouter");
+const userRouter = require("./routes/userRouter");
 const pitchRouter = require("./routes/pitchRouter");
 const reservationRouter = require("./routes/reservationRouter");
-const userRouter = require("./routes/userRouter");
 const leaderboardRouter = require("./routes/leaderboardRouter");
 require("./utils/leaderboardCron"); //to run the cron job
 
 //initializing the express app
 const app = express();
 
-//allow requests from your frontend origin
-app.use(
-  cors({
-    origin: "http://localhost:8080", // React app URL
-  })
-);
-
 //middlewares
-app.use(express.json()); // Parse JSON request bodies
 app.use(morgan("dev")); //logging
+app.use(express.json()); //parse JSON request bodies
+app.use(cors({ origin: "http://localhost:8080" })); //allow requests from frontend
 
 //routes
 app.use("/auth", authRouter);
+app.use("/users", userRouter);
 app.use("/pitches", pitchRouter);
 app.use("/reservations", reservationRouter);
-app.use("/users", userRouter);
 app.use("/leaderboards", leaderboardRouter);
-
-//to caught unhandled error
-app.use((err, req, res, next) => {
-  console.error("🔥 Uncaught error:", err);
-
-  res.status(500).json({
-    status: "error",
-    message: err.message || "Something went wrong",
-  });
-});
 
 //exporting the app
 module.exports = app;

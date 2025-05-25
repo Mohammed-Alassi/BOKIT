@@ -9,7 +9,7 @@ const userKickedTemplate = require("../utils/templates/userKicked");
 const userSuspendedTemplate = require("../utils/templates/userSuspended");
 const waitlistAvailableTemplate = require("../utils/templates/waitlistAvailable");
 
-//helper: assign badges to a user based on updated stats
+//helper:assign badges to a user based on updated stats
 const assignBadgesToUser = async (user) => {
   //list of all supported badge types
   const badgeTypes = [
@@ -83,6 +83,7 @@ exports.createReservation = async (req, res) => {
         message: "Reservation must be scheduled at least 5 days from now.",
       });
     }
+
     //validate max duration = 2 hours
     const durationInMs = end - start;
     const twoHours = 2 * 60 * 60 * 1000;
@@ -174,7 +175,7 @@ exports.getAllReservations = async (req, res) => {
       .populate("currentPlayers", "firstName lastName profilePicture")
       .populate("waitList", "firstName lastName profilePicture");
 
-    // Format pitch playersPerSide as "5v5"
+    //format pitch playersPerSide as "5v5"
     const formatted = reservations.map((resv) => {
       const pitch = resv.pitch;
       const isAdmin = req.user && req.user.role === "admin";
@@ -197,7 +198,6 @@ exports.getAllReservations = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get reservations error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to retrieve reservations",
@@ -205,6 +205,7 @@ exports.getAllReservations = async (req, res) => {
   }
 };
 
+//get reservation by id
 exports.getReservationById = async (req, res) => {
   try {
     const reservation = await Reservation.findById(req.params.id)
@@ -242,7 +243,6 @@ exports.getReservationById = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get reservation error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to retrieve reservation",
@@ -469,8 +469,7 @@ exports.deleteReservation = async (req, res) => {
   try {
     const reservation = await Reservation.findById(req.params.id)
       .populate("currentPlayers", "firstName lastName email")
-      //get names and emails of users
-      .populate("pitch"); //get pitch details
+      .populate("pitch");
 
     if (!reservation) {
       return res.status(404).json({
@@ -523,7 +522,6 @@ exports.deleteReservation = async (req, res) => {
       message: "Reservation deleted",
     });
   } catch (err) {
-    console.error("Delete reservation error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to delete reservation",
@@ -536,8 +534,8 @@ exports.kickPlayer = async (req, res) => {
   try {
     const { userId, reason, suspensionDays } = req.body;
     const reservation = await Reservation.findById(req.params.id)
-      .populate("pitch") // get pitch details
-      .populate("currentPlayers", "firstName lastName email"); // needed for email
+      .populate("pitch")
+      .populate("currentPlayers", "firstName lastName email");
 
     if (!reservation) {
       return res.status(404).json({
@@ -577,7 +575,6 @@ exports.kickPlayer = async (req, res) => {
         message: "User not found",
       });
     }
-
     user.suspendedUntil = new Date(
       Date.now() + suspensionDays * 24 * 60 * 60 * 1000
     );
@@ -656,7 +653,6 @@ exports.kickPlayer = async (req, res) => {
       message: "Player was kicked and suspended",
     });
   } catch (err) {
-    console.error("Kick player error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to kick player",
@@ -748,7 +744,6 @@ exports.addSummary = async (req, res) => {
       message: "Summary added, stats updated, reservation deleted",
     });
   } catch (err) {
-    console.error("Add summary error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to add summary",

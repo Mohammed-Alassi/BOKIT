@@ -54,7 +54,6 @@ exports.getLeaderboardByType = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Leaderboard fetch error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to load leaderboard",

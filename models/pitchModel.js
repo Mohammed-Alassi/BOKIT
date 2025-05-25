@@ -16,7 +16,7 @@ const pitchSchema = new mongoose.Schema({
   playersPerSide: {
     type: Number,
     required: [true, "Please provide number of players per side"],
-    //min: [5, "Players per side must be at least 5"],
+    min: [5, "Players per side must be at least 5"],
   },
   city: {
     type: String,
@@ -54,6 +54,6 @@ const pitchSchema = new mongoose.Schema({
   },
 });
 
-//export model
+//export
 const Pitch = mongoose.model("Pitch", pitchSchema);
 module.exports = Pitch;
