@@ -32,5 +32,15 @@ app.use("/reservations", reservationRouter);
 app.use("/users", userRouter);
 app.use("/leaderboards", leaderboardRouter);
 
+//to caught unhandled error
+app.use((err, req, res, next) => {
+  console.error("🔥 Uncaught error:", err);
+
+  res.status(500).json({
+    status: "error",
+    message: err.message || "Something went wrong",
+  });
+});
+
 //exporting the app
 module.exports = app;

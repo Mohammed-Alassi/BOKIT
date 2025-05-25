@@ -15,8 +15,16 @@ const fileFilter = (req, file, cb) => {
 };
 
 //create the multer instance with storage and custom filter
-const uploadPitch = multer({ storage: pitchStorage, fileFilter });
-const uploadUser = multer({ storage: userStorage, fileFilter });
+const uploadPitch = multer({
+  storage: pitchStorage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+});
+const uploadUser = multer({
+  storage: userStorage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 //export the upload middleware
 module.exports = {
