@@ -7,6 +7,7 @@ const cors = require("cors");
 const authRouter = require("./routes/authRouter");
 const pitchRouter = require("./routes/pitchRouter");
 const reservationRouter = require("./routes/reservationRouter");
+const userRouter = require("./routes/userRouter");
 
 //initializing the express app
 const app = express();
@@ -26,6 +27,7 @@ app.use(morgan("dev")); //logging
 app.use("/auth", authRouter);
 app.use("/pitches", pitchRouter);
 app.use("/reservations", reservationRouter);
+app.use("/users", userRouter);
 
 //exporting the app
 module.exports = app;

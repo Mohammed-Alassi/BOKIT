@@ -1,6 +1,6 @@
 //modules
 const multer = require("multer");
-const { storage } = require("../utils/cloudinary"); //import Cloudinary storage
+const { pitchStorage, userStorage } = require("../utils/cloudinary"); //import Cloudinary storage
 
 //custom file filter for validating allowed MIME types
 const fileFilter = (req, file, cb) => {
@@ -15,10 +15,11 @@ const fileFilter = (req, file, cb) => {
 };
 
 //create the multer instance with storage and custom filter
-const upload = multer({
-  storage,
-  fileFilter,
-});
+const uploadPitch = multer({ storage: pitchStorage, fileFilter });
+const uploadUser = multer({ storage: userStorage, fileFilter });
 
 //export the upload middleware
-module.exports = upload;
+module.exports = {
+  uploadPitch,
+  uploadUser,
+};
