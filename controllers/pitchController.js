@@ -7,14 +7,28 @@ const pitchDeletedTemplate = require("../utils/templates/pitchDeleted");
 //create a new pitch
 exports.createPitch = async (req, res) => {
   try {
-    const { name, playersPerSide, city, location, description, services } =
-      req.body;
+    const { name, playersPerSide, city, location, description } = req.body;
+
+    let services = req.body.services;
+
+    if (typeof services === "string") {
+      try {
+        services = JSON.parse(services);
+      } catch (err) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Invalid services format",
+        });
+      }
+    }
 
     // Extract the files grouped by name from multer
     const backgroundImageFile = req.files?.backgroundImage?.[0];
     const additionalImageFiles = req.files?.images || [];
 
     //ensure background image is provided
+    console.log(backgroundImageFile);
+    console.log(req.file);
     if (!backgroundImageFile) {
       return res.status(400).json({
         status: "fail",
