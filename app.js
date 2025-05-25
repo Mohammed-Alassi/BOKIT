@@ -8,6 +8,8 @@ const authRouter = require("./routes/authRouter");
 const pitchRouter = require("./routes/pitchRouter");
 const reservationRouter = require("./routes/reservationRouter");
 const userRouter = require("./routes/userRouter");
+const leaderboardRouter = require("./routes/leaderboardRouter");
+require("./utils/leaderboardCron"); //to run the cron job
 
 //initializing the express app
 const app = express();
@@ -28,6 +30,7 @@ app.use("/auth", authRouter);
 app.use("/pitches", pitchRouter);
 app.use("/reservations", reservationRouter);
 app.use("/users", userRouter);
+app.use("/leaderboards", leaderboardRouter);
 
 //exporting the app
 module.exports = app;

@@ -1,8 +1,9 @@
 //modules
 const mongoose = require("mongoose");
 
-//schema
+//schema definition for a single leaderboard type (e.g., "goals", "mvp", etc.)
 const leaderboardSchema = new mongoose.Schema({
+  //type of stat the leaderboard tracks
   type: {
     type: String,
     enum: ["wins", "mvp", "goals", "assists", "interceptions", "cleanSheets"],
@@ -10,19 +11,8 @@ const leaderboardSchema = new mongoose.Schema({
     unique: true,
   },
 
+  //top 50 players for this stat type
   topPlayers: [
-    {
-      player: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      statValue: { type: Number, default: 0 },
-      matches: { type: Number, default: 0 },
-    },
-  ],
-
-  monthSnapshot: [
     {
       player: {
         type: mongoose.Schema.Types.ObjectId,
