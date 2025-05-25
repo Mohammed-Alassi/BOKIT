@@ -98,6 +98,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+
+  passwordResetOTP: {
+    type: String,
+    select: false,
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false,
+  },
 });
 
 //export model
