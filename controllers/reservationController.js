@@ -3,6 +3,11 @@ const Reservation = require("../models/reservationModel");
 const Pitch = require("../models/pitchModel");
 const User = require("../models/userModel");
 const Badge = require("../models/badgeModel");
+const sendEmail = require("../utils/email");
+const reservationRemovedTemplate = require("../utils/templates/reservationRemoved");
+const userKickedTemplate = require("../utils/templates/userKicked");
+const userSuspendedTemplate = require("../utils/templates/userSuspended");
+const waitlistAvailableTemplate = require("../utils/templates/waitlistAvailable");
 
 //helper: assign badges to a user based on updated stats
 const assignBadgesToUser = async (user) => {
@@ -338,7 +343,9 @@ exports.joinReservation = async (req, res) => {
 exports.cancelReservation = async (req, res) => {
   try {
     const userId = req.user._id;
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation = await Reservation.findById(req.params.id)
+      .populate("pitch")
+      .populate("currentPlayers", "_id firstName lastName email");
 
     if (!reservation) {
       return res.status(404).json({
@@ -348,7 +355,9 @@ exports.cancelReservation = async (req, res) => {
     }
 
     //check if user is in currentPlayers
-    const index = reservation.currentPlayers.indexOf(userId);
+    const index = reservation.currentPlayers.findIndex(
+      (player) => player._id.toString() === userId.toString()
+    );
     if (index === -1) {
       return res.status(400).json({
         status: "fail",
@@ -368,8 +377,44 @@ exports.cancelReservation = async (req, res) => {
 
     //remove user from currentPlayers
     reservation.currentPlayers.splice(index, 1);
-
     await reservation.save();
+
+    //notify waitlist if a slot is now available
+    if (
+      reservation.waitList.length > 0 &&
+      reservation.currentPlayers.length < reservation.maxPlayers
+    ) {
+      const waitlistedUsers = await User.find({
+        _id: { $in: reservation.waitList },
+      });
+
+      for (const waitUser of waitlistedUsers) {
+        const { subject, html } = waitlistAvailableTemplate({
+          firstName: waitUser.firstName,
+          lastName: waitUser.lastName,
+          title: reservation.title,
+          pitchName: reservation.pitch.name,
+          date: reservation.startTime.toLocaleDateString(),
+          startTime: reservation.startTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          endTime: reservation.endTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+        });
+
+        await sendEmail({
+          to: waitUser.email,
+          subject,
+          html,
+          text: `A spot is now available in reservation "${reservation.title}" at ${reservation.pitch.name}.`,
+        });
+      }
+    }
 
     res.status(200).json({
       status: "success",
@@ -422,7 +467,10 @@ exports.removeFromWaitlist = async (req, res) => {
 //delete reservation
 exports.deleteReservation = async (req, res) => {
   try {
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation = await Reservation.findById(req.params.id)
+      .populate("currentPlayers", "firstName lastName email")
+      //get names and emails of users
+      .populate("pitch"); //get pitch details
 
     if (!reservation) {
       return res.status(404).json({
@@ -433,10 +481,38 @@ exports.deleteReservation = async (req, res) => {
 
     //only allow deletion if the reservation is still upcoming
     const now = new Date();
-    if (now >= reservation.startTime) {
+    if (now >= new Date(reservation.startTime)) {
       return res.status(400).json({
         status: "fail",
         message: "You can only delete reservations that are upcoming",
+      });
+    }
+
+    //send email to all players
+    for (const player of reservation.currentPlayers) {
+      const { subject, html } = reservationRemovedTemplate({
+        firstName: player.firstName,
+        lastName: player.lastName,
+        reservationTitle: reservation.title,
+        pitchName: reservation.pitch.name,
+        reservationDate: reservation.startTime.toLocaleDateString(),
+        startTime: reservation.startTime.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        endTime: reservation.endTime.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      });
+
+      await sendEmail({
+        to: player.email,
+        subject,
+        html,
+        text: `Your reservation at ${reservation.pitch.name} was cancelled.`,
       });
     }
 
@@ -459,7 +535,9 @@ exports.deleteReservation = async (req, res) => {
 exports.kickPlayer = async (req, res) => {
   try {
     const { userId, reason, suspensionDays } = req.body;
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation = await Reservation.findById(req.params.id)
+      .populate("pitch") // get pitch details
+      .populate("currentPlayers", "firstName lastName email"); // needed for email
 
     if (!reservation) {
       return res.status(404).json({
@@ -477,13 +555,17 @@ exports.kickPlayer = async (req, res) => {
     }
 
     //remove player from currentPlayers
-    const index = reservation.currentPlayers.indexOf(userId);
+    const index = reservation.currentPlayers.findIndex(
+      (player) => player._id.toString() === userId
+    );
     if (index === -1) {
       return res.status(400).json({
         status: "fail",
         message: "Player is not part of this reservation",
       });
     }
+
+    const player = reservation.currentPlayers[index];
     reservation.currentPlayers.splice(index, 1);
     await reservation.save();
 
@@ -501,6 +583,73 @@ exports.kickPlayer = async (req, res) => {
     );
     user.suspensionReason = reason;
     await user.save();
+
+    //send kick email
+    const { subject, html } = userKickedTemplate({
+      firstName: player.firstName,
+      lastName: player.lastName,
+      title: reservation.title,
+      pitchName: reservation.pitch.name,
+      date: reservation.startTime.toLocaleDateString(),
+      startTime: reservation.startTime.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      endTime: reservation.endTime.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      suspensionReason: reason,
+      suspendedUntil: user.suspendedUntil.toLocaleDateString(),
+    });
+
+    await sendEmail({
+      to: player.email,
+      subject,
+      html,
+      text: `You have been removed from reservation "${reservation.title}" at ${
+        reservation.pitch.name
+      }. Reason: ${reason}. Suspended until ${user.suspendedUntil.toLocaleDateString()}`,
+    });
+
+    //notify waitlist if slot is now available
+    if (
+      reservation.waitList.length > 0 &&
+      reservation.currentPlayers.length < reservation.maxPlayers
+    ) {
+      const waitlistedUsers = await User.find({
+        _id: { $in: reservation.waitList },
+      });
+
+      for (const waitUser of waitlistedUsers) {
+        const { subject, html } = waitlistAvailableTemplate({
+          firstName: waitUser.firstName,
+          lastName: waitUser.lastName,
+          title: reservation.title,
+          pitchName: reservation.pitch.name,
+          date: reservation.startTime.toLocaleDateString(),
+          startTime: reservation.startTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          endTime: reservation.endTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+        });
+
+        await sendEmail({
+          to: waitUser.email,
+          subject,
+          html,
+          text: `A spot is now available in reservation "${reservation.title}" at ${reservation.pitch.name}.`,
+        });
+      }
+    }
 
     res.status(200).json({
       status: "success",
@@ -573,6 +722,22 @@ exports.addSummary = async (req, res) => {
       user.suspensionReason = absentee.reason;
 
       await user.save();
+
+      const { subject, html } = userSuspendedTemplate({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        suspensionReason: user.suspensionReason,
+        suspendedUntil: user.suspendedUntil.toLocaleDateString(),
+      });
+
+      await sendEmail({
+        to: user.email,
+        subject,
+        html,
+        text: `You have been suspended from BOKIT. Reason: ${
+          user.suspensionReason
+        }. Until: ${user.suspendedUntil.toLocaleDateString()}`,
+      });
     }
 
     //delete the reservation

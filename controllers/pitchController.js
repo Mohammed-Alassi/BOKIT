@@ -1,6 +1,8 @@
 //modules
 const Pitch = require("../models/pitchModel");
 const Reservation = require("../models/reservationModel");
+const sendEmail = require("../utils/email");
+const pitchDeletedTemplate = require("../utils/templates/pitchDeleted");
 
 //create a new pitch
 exports.createPitch = async (req, res) => {
@@ -137,25 +139,63 @@ exports.deletePitch = async (req, res) => {
     const pitchId = req.params.id;
 
     //check if pitch exists
-    const existingPitch = await Pitch.findById(pitchId);
-    if (!existingPitch) {
+    const pitch = await Pitch.findById(pitchId);
+    if (!pitch) {
       return res.status(404).json({
         status: "fail",
         message: "Pitch not found",
       });
     }
 
-    //delete all reservations linked to this pitch
-    await Reservation.deleteMany({ pitch: pitchId });
+    //find all future reservations for this pitch
+    const now = new Date();
+    const reservations = await Reservation.find({
+      pitch: pitch._id,
+      startTime: { $gte: now },
+    }).populate("currentPlayers", "firstName lastName email");
+
+    //send email to each player in each reservation
+    for (const reservation of reservations) {
+      for (const player of reservation.currentPlayers) {
+        const { subject, html } = pitchDeletedTemplate({
+          firstName: player.firstName,
+          lastName: player.lastName,
+          reservationTitle: reservation.title,
+          pitchName: pitch.name,
+          reservationDate: reservation.startTime.toLocaleDateString(),
+          startTime: reservation.startTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          endTime: reservation.endTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+        });
+
+        await sendEmail({
+          to: player.email,
+          subject,
+          html,
+          text: `The pitch ${pitch.name} has been deleted. Your reservation "${reservation.title}" has been cancelled.`,
+        });
+      }
+
+      //delete reservation
+      await Reservation.findByIdAndDelete(reservation._id);
+    }
 
     //delete the pitch
     await Pitch.findByIdAndDelete(pitchId);
 
     res.status(200).json({
       status: "success",
-      message: "Pitch and related reservations deleted successfully",
+      message: "Pitch and all related reservations deleted successfully",
     });
   } catch (err) {
+    console.error("Delete pitch error:", err);
     res.status(500).json({
       status: "error",
       message: "Failed to delete pitch and reservations. Please try again.",
