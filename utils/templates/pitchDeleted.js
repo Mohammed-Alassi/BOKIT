@@ -26,7 +26,7 @@ module.exports = ({
   `;
 
   return {
-    subject: `Pitch "${pitchName}" Deleted - Reservation Cancelled`,
+    subject: `Pitch "${pitchName}" Deleted`,
     html: baseLayout(content),
   };
 };

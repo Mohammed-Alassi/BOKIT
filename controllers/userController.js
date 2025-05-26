@@ -7,7 +7,7 @@ exports.getMyProfile = async (req, res) => {
   try {
     //get the logged-in user's full data from the DB
     const user = await User.findById(req.user._id).select(
-      "-password -__v -role -suspensionReason" //exclude fields
+      "-password -__v -suspensionReason" //exclude fields
     );
 
     if (!user) {
@@ -115,10 +115,10 @@ exports.deleteMyProfile = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const userId = req.params.id;
-    const requester = req.user;
+    const requester = req.user || null;
 
     const user = await User.findById(userId).select(
-      "-password -__v -role -suspensionReason"
+      "-password -__v -suspensionReason"
     );
 
     if (!user) {
@@ -128,8 +128,14 @@ exports.getUserById = async (req, res) => {
       });
     }
 
-    //if the requester is a player and not viewing themselves, hide private fields
-    if (requester.role === "player" && !user._id.equals(requester._id)) {
+    //if the requester is a player and not viewing themselves or guest, hide private fields
+    const isGuest = !requester;
+    const isDifferentPlayer =
+      requester &&
+      requester.role === "player" &&
+      !user._id.equals(requester._id);
+
+    if (isGuest || isDifferentPlayer) {
       user.email = undefined;
       user.phone = undefined;
       user.suspendedUntil = undefined;

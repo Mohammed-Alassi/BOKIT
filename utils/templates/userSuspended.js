@@ -18,7 +18,7 @@ module.exports = ({
   `;
 
   return {
-    subject: "Account Suspension Notice - BOKIT",
+    subject: "Account Suspension Notice",
     html: baseLayout(content),
   };
 };

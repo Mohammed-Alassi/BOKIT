@@ -25,7 +25,7 @@ module.exports = ({
   `;
 
   return {
-    subject: "Reservation Cancelled - BOKIT",
+    subject: "Reservation Cancelled",
     html: baseLayout(content),
   };
 };

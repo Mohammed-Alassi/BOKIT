@@ -41,7 +41,7 @@ const protectMiddleware = async (req, res, next) => {
     //attach user to request
     req.user = currentUser;
 
-    next(); //pass control to next middleware/route
+    next();
   } catch (err) {
     res.status(401).json({
       status: "fail",

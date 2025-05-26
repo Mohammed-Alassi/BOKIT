@@ -40,7 +40,7 @@ const updateLeaderboard = async () => {
       await Leaderboard.findOneAndUpdate(
         { type: stat },
         { type: stat, topPlayers: top50 },
-        { upsert: true, new: true }
+        { upsert: true, new: true } //if no doc , add one
       );
     }
 

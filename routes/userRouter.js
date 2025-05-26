@@ -5,8 +5,9 @@ const userController = require("../controllers/userController");
 const protectMiddleware = require("../middlewares/protectMiddleware");
 const restrictedTo = require("../middlewares/restrictedToMiddleware");
 const { uploadUser } = require("../middlewares/uploadMiddleware");
+const optionalAuthMiddleware = require("../middlewares/optionalAuthMiddleware");
 
-//players route
+//players routes
 router.get(
   "/me",
   protectMiddleware,
@@ -36,8 +37,8 @@ router.get(
   userController.getMyBookings
 );
 
-//public route
-router.get("/:id", protectMiddleware, userController.getUserById);
+//public routes
+router.get("/:id", optionalAuthMiddleware, userController.getUserById);
 
 //export
 module.exports = router;

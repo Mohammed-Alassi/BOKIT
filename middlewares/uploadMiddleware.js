@@ -16,7 +16,7 @@ const fileFilter = (req, file, cb) => {
 
 //create the multer instance with storage and custom filter
 const uploadPitch = multer({
-  storage: pitchStorage,
+  storage: pitchStorage, //determine where/how pitch images are store
   fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });

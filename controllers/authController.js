@@ -147,11 +147,23 @@ exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
 
     //check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+passwordResetExpires");
+
     if (!user) {
       return res.status(404).json({
         status: "fail",
         message: "No user found with that email",
+      });
+    }
+
+    //prevent OTP resend within 60 seconds
+    if (user.passwordResetExpires && user.passwordResetExpires > Date.now()) {
+      const waitTime = Math.ceil(
+        (user.passwordResetExpires - Date.now()) / 1000
+      );
+      return res.status(429).json({
+        status: "fail",
+        message: `Please wait ${waitTime} seconds before requesting a new OTP.`,
       });
     }
 
@@ -245,7 +257,7 @@ exports.resetPassword = async (req, res) => {
     const { email, newPassword, confirmPassword } = req.body;
 
     //find the user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(404).json({
         status: "fail",
@@ -265,6 +277,15 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({
         status: "fail",
         message: "Passwords do not match",
+      });
+    }
+
+    //compare new password with old password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        status: "fail",
+        message: "New password must be different from the current password",
       });
     }
 

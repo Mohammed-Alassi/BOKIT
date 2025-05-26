@@ -29,7 +29,7 @@ module.exports = ({
   `;
 
   return {
-    subject: "Suspension Notice - Removed from Reservation | BOKIT",
+    subject: "Suspension Notice - Kicked from Reservation",
     html: baseLayout(content),
   };
 };

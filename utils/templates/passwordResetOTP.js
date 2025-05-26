@@ -16,7 +16,7 @@ module.exports = ({ firstName, lastName, otp }) => {
   `;
 
   return {
-    subject: "BOKIT Password Reset Code",
+    subject: "Password Reset Code",
     html: baseLayout(content),
   };
 };

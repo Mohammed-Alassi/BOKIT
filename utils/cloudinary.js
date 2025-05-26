@@ -22,7 +22,7 @@ const pitchStorage = new CloudinaryStorage({
 const userStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "bokit/users", // ✅ target users folder
+    folder: "bokit/users",
     allowed_formats: ["jpg", "jpeg", "png"],
   },
 });

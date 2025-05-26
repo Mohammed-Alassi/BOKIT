@@ -332,6 +332,7 @@ exports.joinReservation = async (req, res) => {
       }
     }
   } catch (err) {
+    console.error("Error in joinReservation:", err); //for validation
     res.status(500).json({
       status: "error",
       message: "Failed to join reservation",

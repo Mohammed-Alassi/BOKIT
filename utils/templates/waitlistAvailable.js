@@ -25,7 +25,7 @@ module.exports = ({
   `;
 
   return {
-    subject: "A Spot Just Opened Up - BOKIT",
+    subject: "A Spot Just Opened Up",
     html: baseLayout(content),
   };
 };
