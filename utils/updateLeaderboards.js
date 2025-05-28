@@ -16,6 +16,9 @@ const updateLeaderboard = async () => {
   try {
     //loop through each stat type to update its leaderboard
     for (const stat of statTypes) {
+      //remove the old leaderboard entry completely
+      await Leaderboard.deleteOne({ type: stat });
+
       //fetch users with this stat > 0 and project needed fields
       const users = await User.find({ [`stats.${stat}`]: { $gt: 0 } })
         .select("firstName lastName profilePicture stats.matches stats." + stat)
